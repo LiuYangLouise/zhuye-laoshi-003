@@ -1371,54 +1371,59 @@
         }
         
         // 生成学生端页面
-        function generateStudentPage() {
-            // 获取当前作业数据
-            saveHomeworkData();
-            
-            // 检查是否有作业内容
-            const hasContent = Object.values(homeworkData).some(value => 
-                value && value.trim() !== '' && !value.includes('password')
-            );
-            
-            if (!hasContent) {
-                const statusMessage = document.getElementById('statusMessage');
-                statusMessage.textContent = '请至少填写一项作业内容';
-                statusMessage.className = 'status-message status-error';
-                statusMessage.style.display = 'block';
-                return;
-            }
-            
-            // 生成学生端HTML内容
-            const studentPageHTML = createStudentPageHTML();
-            
-            // 创建Blob对象
-            const blob = new Blob([studentPageHTML], { type: 'text/html' });
-            
-            // 创建URL
-            const url = URL.createObjectURL(blob);
-            
-            // 保存数据供下载使用
-            studentPageData = {
-                html: studentPageHTML,
-                url: url,
-                timestamp: new Date().getTime()
-            };
-            
-            // 显示URL
-            displayStudentPageUrl();
-            
-            // 显示预览
-            showStudentPreview();
-            
-            // 提示用户
-            const statusMessage = document.getElementById('statusMessage');
-            statusMessage.textContent = '学生端页面生成成功！请复制下方链接分享给学生。';
-            statusMessage.className = 'status-message status-success';
-            statusMessage.style.display = 'block';
-            
-            console.log('学生端页面已生成，URL:', url);
-        }
-        
+
+function generateStudentPage() {
+    // 获取当前作业数据
+    saveHomeworkData();
+    
+    // 检查是否有作业内容
+    const hasContent = Object.values(homeworkData).some(value => 
+        value && value.trim() !== '' && !value.includes('password')
+    );
+    
+    if (!hasContent) {
+        const statusMessage = document.getElementById('statusMessage');
+        statusMessage.textContent = '请至少填写一项作业内容';
+        statusMessage.className = 'status-message status-error';
+        statusMessage.style.display = 'block';
+        return;
+    }
+    
+    // 生成学生端HTML内容
+    const studentPageHTML = createStudentPageHTML();
+    
+    // 创建可下载的HTML文件
+    const date = getCurrentDate();
+    const filename = `Reborn作业_${date.year}年${date.month}月${date.day}日.html`;
+    
+    // 创建下载链接
+    const blob = new Blob([studentPageHTML], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    
+    // 创建下载链接并自动点击下载
+    const downloadLink = document.createElement('a');
+    downloadLink.href = url;
+    downloadLink.download = filename;
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+    
+    // 释放URL对象
+    setTimeout(() => {
+        URL.revokeObjectURL(url);
+    }, 100);
+    
+    // 显示预览
+    showStudentPreview();
+    
+    // 提示用户
+    const statusMessage = document.getElementById('statusMessage');
+    statusMessage.textContent = `学生端页面已生成并开始下载！文件名：${filename}`;
+    statusMessage.className = 'status-message status-success';
+    statusMessage.style.display = 'block';
+    
+    console.log('学生端页面已生成，文件名:', filename);
+}        
         // 创建学生端页面HTML（带有黑白主题切换功能）
         function createStudentPageHTML() {
             const date = getCurrentDate();
@@ -2058,17 +2063,21 @@
         
         // 显示学生端页面URL
         function displayStudentPageUrl() {
-            const urlDisplayContainer = document.getElementById('urlDisplayContainer');
-            const studentPageUrl = document.getElementById('studentPageUrl');
-            const copySuccess = document.getElementById('copySuccess');
-            
-            if (studentPageData && studentPageData.url) {
-                // 使用Blob URL
-                studentPageUrl.textContent = studentPageData.url;
-                urlDisplayContainer.classList.add('show');
-                copySuccess.style.display = 'none';
-            }
-        }
+    const urlDisplayContainer = document.getElementById('urlDisplayContainer');
+    const studentPageUrl = document.getElementById('studentPageUrl');
+    const copySuccess = document.getElementById('copySuccess');
+    
+    const date = getCurrentDate();
+    const filename = `Reborn作业_${date.year}年${date.month}月${date.day}日.html`;
+    
+    // 显示文件名和说明
+    studentPageUrl.textContent = `文件已下载：${filename}`;
+    urlDisplayContainer.classList.add('show');
+    copySuccess.style.display = 'none';
+    
+    // 更新说明文字
+    document.querySelector('.url-title').textContent = '学生端页面已生成并下载';
+}
         
         // 复制URL功能
         function setupCopyUrl() {
